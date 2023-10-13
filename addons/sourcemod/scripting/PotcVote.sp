@@ -9,10 +9,12 @@
 
 public Plugin myinfo =
 {
+	// Credits: This plugin is based on MakoVote
+	// https://github.com/srcdslab/sm-plugin-MakoVote
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.3",
+	version     = "1.4",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
@@ -21,8 +23,10 @@ public Plugin myinfo =
 bool g_bVoteFinished = true;
 bool g_bIsRevote = false;
 bool bStartVoteNextRound = false;
+bool g_bOnCooldown[NUMBEROFSTAGES];
 
 ConVar g_cDelay;
+ConVar g_cPercent;
 
 static char g_sStageName[NUMBEROFSTAGES][512] = {"Classic", "Extreme", "Race Mode"};
 int g_Winnerstage;
@@ -34,6 +38,7 @@ Handle g_CountdownTimer = null;
 public void OnPluginStart()
 {
 	g_cDelay = CreateConVar("sm_potcvote_delay", "3.0", "Time in seconds before firing the vote", FCVAR_NOTIFY, true, 1.0, true, 10.0);
+	g_cPercent = CreateConVar("sm_potcvote_percent", "60", "Percent needed to valid the vote", FCVAR_NOTIFY, true, 1.0, true, 100.0);
 
 	RegServerCmd("sm_potcvote", Command_StartVote);
 	RegServerCmd("sm_cancelcvote", Command_CancelVote);
@@ -50,10 +55,11 @@ public void OnMapStart()
 {
 	VerifyMap();
 
-	PrecacheSound("#nide/Hoist The Colours - Potc.mp3", true);
-	AddFileToDownloadsTable("sound/nide/Hoist The Colours - Potc.mp3");
-
 	bStartVoteNextRound = false;
+	g_bVoteFinished = true;
+
+	for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
+		g_bOnCooldown[i] = false;
 }
 
 public void OnMapEnd()
@@ -66,12 +72,17 @@ void VerifyMap()
 {
 	char currentMap[64];
 	GetCurrentMap(currentMap, sizeof(currentMap));
-	if (StrEqual(currentMap, "ze_potc_v4s_4fix"))
-		return;
-		
-	char sFilename[256];
-	GetPluginFilename(INVALID_HANDLE, sFilename, sizeof(sFilename));
-	ServerCommand("sm plugins unload %s", sFilename);
+	if (!StrEqual(currentMap, "ze_potc_v4s_4fix"))
+	{
+		char sFilename[256];
+		GetPluginFilename(INVALID_HANDLE, sFilename, sizeof(sFilename));
+		ServerCommand("sm plugins unload %s", sFilename);
+	}
+	else
+	{
+		PrecacheSound("#nide/Hoist The Colours - Potc.mp3", true);
+		AddFileToDownloadsTable("sound/nide/Hoist The Colours - Potc.mp3");
+	}
 }
 
 public void OnEntityCreated(int iEntity, const char[] sClassname)
@@ -115,7 +126,7 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		bStartVoteNextRound = false;
 	}
 
-	if (!(g_bVoteFinished))
+	if (!g_bVoteFinished)
 	{
 		int iCounter = FindEntityByTargetname(INVALID_ENT_REFERENCE, "Difficulty_Counter", "math_counter");
 		if (iCounter != INVALID_ENT_REFERENCE)
@@ -124,6 +135,10 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		int iGameText = FindEntityByTargetname(INVALID_ENT_REFERENCE, "Level_Text", "game_text");
 		if (iGameText != INVALID_ENT_REFERENCE)
 			AcceptEntityInput(iGameText, "Kill");
+
+		int iSpawnImmunity = FindEntityByTargetname(INVALID_ENT_REFERENCE, "Protection_trigger", "trigger_multiple");
+		if (iSpawnImmunity != INVALID_ENT_REFERENCE)
+			AcceptEntityInput(iSpawnImmunity, "Enable");
 
 		int iNewGameText;
 		iNewGameText = CreateEntityByName("game_text");
@@ -216,6 +231,25 @@ public Action Command_CancelVote(int args)
 
 public void Cmd_StartVote()
 {
+	int iCurrentStage = GetCurrentStage();
+
+	if (iCurrentStage > -1)
+		g_bOnCooldown[iCurrentStage] = true;
+
+	int iOnCD = 0;
+	for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
+	{
+		if (g_bOnCooldown[i])
+			iOnCD += 1;
+	}
+
+	if (iOnCD >= 2)
+	{
+		PrintToChatAll("iOnCD >=2 : %d", iOnCD);
+		for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
+			g_bOnCooldown[i] = false;
+	}
+
 	g_bVoteFinished = false;
 	GenerateArray();
 	bStartVoteNextRound = true;
@@ -267,7 +301,10 @@ public void InitiateVote()
 		{
 			if (strcmp(sBuffer, g_sStageName[j]) == 0)
 			{
-				AddMenuItem(g_VoteMenu, sBuffer, sBuffer);
+				if (g_bOnCooldown[j])
+					AddMenuItem(g_VoteMenu, sBuffer, sBuffer, ITEMDRAW_DISABLED);
+				else
+					AddMenuItem(g_VoteMenu, sBuffer, sBuffer);
 			}
 		}
 	}
@@ -308,7 +345,7 @@ public int MenuHandler_NotifyPanel(Menu hMenu, MenuAction iAction, int iParam1, 
 public void Handler_SettingsVoteFinished(Handle menu, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
 {
 	int highest_votes = item_info[0][VOTEINFO_ITEM_VOTES];
-	int required_percent = 60;
+	int required_percent = g_cPercent.IntValue;
 	int required_votes = RoundToCeil(float(num_votes) * float(required_percent) / 100);
 
 	if ((highest_votes < required_votes) && (!g_bIsRevote))
@@ -363,12 +400,12 @@ public int GetCurrentStage()
 	int iCounterVal = RoundFloat(GetEntDataFloat(iLevelCounterEnt, offset));
 
 	int iCurrentStage;
-	if (iCounterVal == 2)
+	if (iCounterVal == 1) // Classic
+		iCurrentStage = 0;
+	else if (iCounterVal == 2) // Extreme
 		iCurrentStage = 1;
-	else if (iCounterVal == 3)
+	else if (iCounterVal == 3) // RaceMod
 		iCurrentStage = 2;
-	else if (iCounterVal == 4)
-		iCurrentStage = 3;
 	else
 		iCurrentStage = -1;
 
