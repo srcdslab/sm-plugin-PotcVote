@@ -136,10 +136,6 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		if (iGameText != INVALID_ENT_REFERENCE)
 			AcceptEntityInput(iGameText, "Kill");
 
-		int iSpawnImmunity = FindEntityByTargetname(INVALID_ENT_REFERENCE, "Protection_trigger", "trigger_multiple");
-		if (iSpawnImmunity != INVALID_ENT_REFERENCE)
-			AcceptEntityInput(iSpawnImmunity, "Enable");
-
 		int iNewGameText;
 		iNewGameText = CreateEntityByName("game_text");
 		DispatchKeyValue(iNewGameText, "targetname", "intermission_game_text");
@@ -245,7 +241,6 @@ public void Cmd_StartVote()
 
 	if (iOnCD >= 2)
 	{
-		PrintToChatAll("iOnCD >=2 : %d", iOnCD);
 		for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
 			g_bOnCooldown[i] = false;
 	}
@@ -312,7 +307,7 @@ public void InitiateVote()
 	SetMenuOptionFlags(g_VoteMenu, MENUFLAG_BUTTON_NOVOTE);
 	SetMenuTitle(g_VoteMenu, "What stage to play next?");
 	SetVoteResultCallback(g_VoteMenu, Handler_SettingsVoteFinished);
-	VoteMenuToAll(g_VoteMenu, 12);
+	VoteMenuToAll(g_VoteMenu, 15);
 }
 
 public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int param2)
