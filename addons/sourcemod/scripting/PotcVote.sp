@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.4",
+	version     = "1.4.1",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
@@ -46,7 +46,6 @@ public void OnPluginStart()
 	RegAdminCmd("sm_potcvote", Command_AdminStartVote, ADMFLAG_CONVARS, "sm_potcvote");
 
 	HookEvent("round_start",  OnRoundStart);
-	HookEvent("round_end", OnRoundEnd);
 
 	AutoExecConfig(true);
 }
@@ -103,17 +102,6 @@ public void MyOnEntitySpawned(int iEntity)
 	if ((strcmp(sTargetname, "ext_bombsound2") != 0) && (strcmp(sTargetname, "ext_nukesound") != 0) && (strcmp(sClassname, "ambient_generic") == 0))
 	{
 		AcceptEntityInput(iEntity, "Kill");
-	}
-}
-
-public void OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
-{
-	if(event.GetInt("winner") == CS_TEAM_CT)
-	{
-		int iCurrentStage = GetCurrentStage();
-
-		if (iCurrentStage > -1)
-			Cmd_StartVote();
 	}
 }
 
@@ -282,9 +270,7 @@ public void InitiateVote()
 		return;
 	}
 
-	Handle menuStyle = GetMenuStyleHandle(view_as<MenuStyle>(0));
-
-	g_VoteMenu = CreateMenuEx(menuStyle, Handler_PotcVoteMenu, MenuAction_End | MenuAction_Display | MenuAction_DisplayItem | MenuAction_VoteCancel);
+	g_VoteMenu = CreateMenu(Handler_PotcVoteMenu, MenuAction_End | MenuAction_Display | MenuAction_DisplayItem | MenuAction_VoteCancel);
 
 	int iArraySize = g_StageList.Length;
 	for (int i = 0; i <= (iArraySize - 1); i++)
@@ -307,7 +293,7 @@ public void InitiateVote()
 	SetMenuOptionFlags(g_VoteMenu, MENUFLAG_BUTTON_NOVOTE);
 	SetMenuTitle(g_VoteMenu, "What stage to play next?");
 	SetVoteResultCallback(g_VoteMenu, Handler_SettingsVoteFinished);
-	VoteMenuToAll(g_VoteMenu, 15);
+	VoteMenuToAll(g_VoteMenu, 12);
 }
 
 public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int param2)
@@ -316,6 +302,8 @@ public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int 
 	{
 		case MenuAction_End:
 		{
+			CloseHandle(menu);
+
 			if (param1 != -1)
 			{
 				g_bVoteFinished = true;
@@ -323,17 +311,6 @@ public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int 
 			}
 		}
 	}
-	return 0;
-}
-
-public int MenuHandler_NotifyPanel(Menu hMenu, MenuAction iAction, int iParam1, int iParam2)
-{
-	switch (iAction)
-	{
-		case MenuAction_Select, MenuAction_Cancel:
-			delete hMenu;
-	}
-
 	return 0;
 }
 
@@ -383,8 +360,6 @@ public void Handler_VoteFinishedGeneric(Handle menu, int num_votes, int num_clie
 
 	ServerCommand("sm_stage %d", (g_Winnerstage + 1));
 	TerminateRound();
-
-	delete menu;
 }
 
 public int GetCurrentStage()
