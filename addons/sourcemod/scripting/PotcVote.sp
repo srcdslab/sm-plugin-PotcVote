@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.4.1",
+	version     = "1.4.2",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
@@ -25,8 +25,7 @@ bool g_bIsRevote = false;
 bool bStartVoteNextRound = false;
 bool g_bOnCooldown[NUMBEROFSTAGES];
 
-ConVar g_cDelay;
-ConVar g_cPercent;
+ConVar g_cDelay, g_cPercent;
 
 static char g_sStageName[NUMBEROFSTAGES][512] = {"Classic", "Extreme", "Race Mode"};
 int g_Winnerstage;
@@ -110,7 +109,7 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	if (bStartVoteNextRound)
 	{
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(1.0, StartVote, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		bStartVoteNextRound = false;
 	}
 
@@ -134,7 +133,7 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		DispatchKeyValue(iNewGameText, "fadein", "1");
 		DispatchKeyValue(iNewGameText, "fadeout", "1");
 		DispatchKeyValue(iNewGameText, "holdtime", "30");
-		DispatchKeyValue(iNewGameText, "message", "“If you were waiting for the opportune moment, that was it.” -Jack Sparrow");
+		DispatchKeyValue(iNewGameText, "message", "“If you were waiting for the opportune moment, that was it.” - Jack Sparrow");
 		DispatchKeyValue(iNewGameText, "x", "-1");
 		DispatchKeyValue(iNewGameText, "y", ".01");
 		DispatchKeyValue(iNewGameText, "OnUser1", "!self,Display,,0,-1");
@@ -244,7 +243,7 @@ public void Cmd_CancelVote()
 	CPrintToChatAll("{green}[PotcVote] {cyan}Zombies detected, aborting vote!");
 }
 
-public Action StartVote(Handle timer)
+public Action StartVote_Timer(Handle timer)
 {
 	static int iCountDown = 3;
 	PrintCenterTextAll("[PotcVote] Starting Vote in %ds", iCountDown);
@@ -266,7 +265,7 @@ public void InitiateVote()
 	{
 		CPrintToChatAll("{green}[PotcVote] {white}Another vote is currently in progress, retrying again in 5s.");
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(5.0, StartVote, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(5.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
 
@@ -333,7 +332,7 @@ public void Handler_SettingsVoteFinished(Handle menu, int num_votes, int num_cli
 		g_bIsRevote = true;
 
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(1.0, StartVote, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 		return;
 	}
@@ -411,7 +410,7 @@ public int FindEntityByTargetname(int entity, const char[] sTargetname, const ch
 	return INVALID_ENT_REFERENCE;
 }
 
-void TerminateRound()
+stock void TerminateRound()
 {
 	CS_TerminateRound(g_cDelay.FloatValue, CSRoundEnd_Draw, false);
 
