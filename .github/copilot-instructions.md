@@ -14,8 +14,8 @@ This repository contains **PotcVote**, a SourcePawn plugin for SourceMod that im
 ## Technical Environment
 
 - **Language**: SourcePawn (.sp files)
-- **Platform**: SourceMod 1.11+ (minimum required version)
-- **Build Tool**: SourceKnight 0.2 (configured in `sourceknight.yaml`)
+- **Platform**: SourceMod 1.12+ (minimum required version)
+- **Build Tool**: Native GitHub Actions (spcomp via `rumblefrog/setup-sp`, configured in `.github/workflows/ci.yml`)
 - **Dependencies**: 
   - SourceMod base includes (`sourcemod`, `sdkhooks`, `sdktools`, `cstrike`)
   - MultiColors plugin for chat formatting (`multicolors`)
@@ -31,8 +31,7 @@ This repository contains **PotcVote**, a SourcePawn plugin for SourceMod that im
 │   └── scripting/
 │       └── PotcVote.sp      # Main plugin source (421 lines)
 ├── sound/nide/              # Custom sound files for the plugin
-├── sourceknight.yaml       # Build configuration
-└── .gitignore              # Excludes build artifacts (.sourceknight/, *.smx)
+└── .gitignore              # Excludes build artifacts (*.smx)
 ```
 
 ## Plugin Commands & Configuration
@@ -95,26 +94,23 @@ The plugin executes `sm_stage <number>` when a vote succeeds, where:
 - Use translation files for user messages (if implementing new text)
 - Validate entity operations before execution
 
-## Build System (SourceKnight)
+## Build System (Native GitHub Actions)
 
-### Configuration (`sourceknight.yaml`)
+### Configuration (`.github/workflows/ci.yml`)
 - **Project Name**: PotcVote
-- **SourceMod Version**: 1.11.0-git6934
-- **Output Directory**: `/addons/sourcemod/plugins`
-- **Dependencies**: Automatically downloads SourceMod and MultiColors
+- **SourceMod Version**: 1.12.x (via `rumblefrog/setup-sp`)
+- **Output Directory**: `addons/sourcemod/plugins`
+- **Dependencies**: MultiColors is cloned at build time and its include copied into the compiler include path
 
 ### Build Commands
 ```bash
-# If SourceKnight is available:
-sourceknight build
-
-# The CI uses maxime1907/action-sourceknight@v1
-# Manual compilation requires SourceMod compiler (spcomp)
+# CI compiles with spcomp directly (no local build tool required):
+spcomp -i include -o ../plugins/PotcVote.smx PotcVote.sp
 ```
 
 ### CI/CD Pipeline
 - **Trigger**: Push, PR, manual dispatch
-- **Build**: Compiles plugin using SourceKnight action
+- **Build**: Compiles plugin using `spcomp` (via `rumblefrog/setup-sp`)
 - **Package**: Creates release artifacts with sound files
 - **Release**: Auto-tags and releases on main/master branch
 
@@ -123,7 +119,7 @@ sourceknight build
 ### Making Changes
 1. **Code Changes**: Edit `addons/sourcemod/scripting/PotcVote.sp`
 2. **Sound Files**: Add/modify files in `sound/nide/` directory
-3. **Build Config**: Update `sourceknight.yaml` if dependencies change
+3. **Build Config**: Update `.github/workflows/ci.yml` if dependencies change
 4. **Testing**: Plugin requires `ze_potc_v4s_4fix` map for full functionality
 
 ### Common Tasks
@@ -220,8 +216,8 @@ ConVar g_cNewVar = CreateConVar("sm_potcvote_setting", "default", "Description",
 ## Common Issues & Solutions
 
 ### Build Issues
-- **SourceKnight not available**: CI handles builds automatically
-- **Missing dependencies**: Check `sourceknight.yaml` configuration
+- **CI handles builds automatically** via native GitHub Actions (spcomp)
+- **Missing dependencies**: Check the "Install dependencies" step in `.github/workflows/ci.yml`
 - **Compilation errors**: Verify SourcePawn syntax and includes
 
 ### Runtime Issues
