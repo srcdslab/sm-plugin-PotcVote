@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/package/addons/sourcemod/plugins
           cp addons/sourcemod/plugins/*.smx /tmp/package/addons/sourcemod/plugins/
-          cp -R sound /tmp/package/common
+          cp -R sound /tmp/package/sound
 
       - name: Upload build archive for test runners
         uses: actions/upload-artifact@v7
