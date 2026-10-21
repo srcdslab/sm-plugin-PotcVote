@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.4.2",
+	version     = "1.4.3",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
@@ -30,7 +30,7 @@ ConVar g_cDelay, g_cPercent;
 static char g_sStageName[NUMBEROFSTAGES][512] = {"Classic", "Extreme", "Race Mode"};
 int g_Winnerstage;
 
-Handle g_VoteMenu = INVALID_HANDLE;
+Menu g_VoteMenu = null;
 ArrayList g_StageList = null;
 Handle g_CountdownTimer = null;
 
@@ -73,7 +73,7 @@ void VerifyMap()
 	if (!StrEqual(currentMap, "ze_potc_v4s_4fix"))
 	{
 		char sFilename[256];
-		GetPluginFilename(INVALID_HANDLE, sFilename, sizeof(sFilename));
+		GetPluginFilename(null, sFilename, sizeof(sFilename));
 		ServerCommand("sm plugins unload %s", sFilename);
 	}
 	else
@@ -109,7 +109,7 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	if (bStartVoteNextRound)
 	{
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		bStartVoteNextRound = false;
 	}
 
@@ -162,7 +162,7 @@ public void GenerateArray()
 	for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
 		g_StageList.PushString(g_sStageName[i]);
 
-	int iArraySize = GetArraySize(g_StageList);
+	int iArraySize = g_StageList.Length;
 
 	for (int i = 0; i <= (iArraySize - 1); i++)
 	{
@@ -265,11 +265,11 @@ public void InitiateVote()
 	{
 		CPrintToChatAll("{green}[PotcVote] {white}Another vote is currently in progress, retrying again in 5s.");
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(5.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(5.0, StartVote_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
 
-	g_VoteMenu = CreateMenu(Handler_PotcVoteMenu, MenuAction_End | MenuAction_Display | MenuAction_DisplayItem | MenuAction_VoteCancel);
+	g_VoteMenu = new Menu(Handler_PotcVoteMenu, MenuAction_End | MenuAction_Display | MenuAction_DisplayItem | MenuAction_VoteCancel);
 
 	int iArraySize = g_StageList.Length;
 	for (int i = 0; i <= (iArraySize - 1); i++)
@@ -282,26 +282,26 @@ public void InitiateVote()
 			if (strcmp(sBuffer, g_sStageName[j]) == 0)
 			{
 				if (g_bOnCooldown[j])
-					AddMenuItem(g_VoteMenu, sBuffer, sBuffer, ITEMDRAW_DISABLED);
+					g_VoteMenu.AddItem(sBuffer, sBuffer, ITEMDRAW_DISABLED);
 				else
-					AddMenuItem(g_VoteMenu, sBuffer, sBuffer);
+					g_VoteMenu.AddItem(sBuffer, sBuffer);
 			}
 		}
 	}
 
-	SetMenuOptionFlags(g_VoteMenu, MENUFLAG_BUTTON_NOVOTE);
-	SetMenuTitle(g_VoteMenu, "What stage to play next?");
-	SetVoteResultCallback(g_VoteMenu, Handler_SettingsVoteFinished);
-	VoteMenuToAll(g_VoteMenu, 12);
+	g_VoteMenu.OptionFlags = MENUFLAG_BUTTON_NOVOTE;
+	g_VoteMenu.SetTitle("What stage to play next?");
+	g_VoteMenu.VoteResultCallback = Handler_SettingsVoteFinished;
+	g_VoteMenu.DisplayVoteToAll(12);
 }
 
-public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int param2)
+public int Handler_PotcVoteMenu(Menu menu, MenuAction action, int param1, int param2)
 {
 	switch(action)
 	{
 		case MenuAction_End:
 		{
-			CloseHandle(menu);
+			delete menu;
 
 			if (param1 != -1)
 			{
@@ -313,7 +313,7 @@ public int Handler_PotcVoteMenu(Handle menu, MenuAction action, int param1, int 
 	return 0;
 }
 
-public void Handler_SettingsVoteFinished(Handle menu, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
+public void Handler_SettingsVoteFinished(Menu menu, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
 {
 	int highest_votes = item_info[0][VOTEINFO_ITEM_VOTES];
 	int required_percent = g_cPercent.IntValue;
@@ -324,15 +324,15 @@ public void Handler_SettingsVoteFinished(Handle menu, int num_votes, int num_cli
 		CPrintToChatAll("{green}[PotcVote] {white}A revote is needed!");
 		char sFirst[128];
 		char sSecond[128];
-		GetMenuItem(menu, item_info[0][VOTEINFO_ITEM_INDEX], sFirst, sizeof(sFirst));
-		GetMenuItem(menu, item_info[1][VOTEINFO_ITEM_INDEX], sSecond, sizeof(sSecond));
+		menu.GetItem(item_info[0][VOTEINFO_ITEM_INDEX], sFirst, sizeof(sFirst));
+		menu.GetItem(item_info[1][VOTEINFO_ITEM_INDEX], sSecond, sizeof(sSecond));
 		g_StageList.Clear();
 		g_StageList.PushString(sFirst);
 		g_StageList.PushString(sSecond);
 		g_bIsRevote = true;
 
 		delete g_CountdownTimer;
-		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, INVALID_HANDLE, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		g_CountdownTimer = CreateTimer(1.0, StartVote_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 		return;
 	}
@@ -342,11 +342,11 @@ public void Handler_SettingsVoteFinished(Handle menu, int num_votes, int num_cli
 	Handler_VoteFinishedGeneric(menu, num_votes, num_clients, client_info, num_items, item_info);
 }
 
-public void Handler_VoteFinishedGeneric(Handle menu, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
+public void Handler_VoteFinishedGeneric(Menu menu, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
 {
 	g_bVoteFinished = true;
 	char sWinner[128];
-	GetMenuItem(menu, item_info[0][VOTEINFO_ITEM_INDEX], sWinner, sizeof(sWinner));
+	menu.GetItem(item_info[0][VOTEINFO_ITEM_INDEX], sWinner, sizeof(sWinner));
 	float fPercentage = float(item_info[0][VOTEINFO_ITEM_VOTES] * 100) / float(num_votes);
 
 	CPrintToChatAll("{green}[PotcVote] {white}Vote Finished! Winner: {red}%s{white} with %d%% of %d votes!", sWinner, RoundToFloor(fPercentage), num_votes);CPrintToChatAll("{green}[PotcVote] {white}Mooving to {red}%s{white}.", sWinner);
