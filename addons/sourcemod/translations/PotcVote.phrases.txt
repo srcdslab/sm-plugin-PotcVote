@@ -1,0 +1,105 @@
+"Phrases"
+{
+	"Potc Vote Initiated"
+	{
+		"#format"	"{1:s},{2:d}"
+		"en"		"{cyan}{1} {white}has initiated a Potc vote round (in {2} seconds)"
+		"fr"		"{cyan}{1} {white}a lancé un round de vote Potc (dans {2} secondes)"
+		"ru"		"{cyan}{1} {white}запустил раунд голосования Potc (через {2} сек.)"
+		"es"		"{cyan}{1} {white}ha iniciado una ronda de votación Potc (en {2} segundos)"
+		"de"		"{cyan}{1} {white}hat eine Potc-Abstimmungsrunde gestartet (in {2} Sekunden)"
+		"pt"		"{cyan}{1} {white}iniciou um round de votação Potc (em {2} segundos)"
+		"chi"		"{cyan}{1} {white}发起了 Potc 投票回合（{2} 秒后）"
+	}
+
+	"Potc Vote Initiated Server"
+	{
+		"en"		"{cyan}The server {white}has initiated a Potc vote round (next round)"
+		"fr"		"{cyan}Le serveur {white}a lancé un round de vote Potc (au prochain round)"
+		"ru"		"{cyan}Сервер {white}запустил раунд голосования Potc (в следующем раунде)"
+		"es"		"{cyan}El servidor {white}ha iniciado una ronda de votación Potc (en la próxima ronda)"
+		"de"		"{cyan}Der Server {white}hat eine Potc-Abstimmungsrunde gestartet (nächste Runde)"
+		"pt"		"{cyan}O servidor {white}iniciou um round de votação Potc (no próximo round)"
+		"chi"		"{cyan}服务器{white}发起了 Potc 投票回合（下一回合）"
+	}
+
+	"Potc Vote Aborted"
+	{
+		"en"		"Zombies detected, aborting vote!"
+		"fr"		"Zombies détectés, vote annulé !"
+		"ru"		"Обнаружены зомби, голосование отменено!"
+		"es"		"¡Zombies detectados, votación cancelada!"
+		"de"		"Zombies entdeckt, die Abstimmung wird abgebrochen!"
+		"pt"		"Zumbis detectados, votação cancelada!"
+		"chi"		"检测到僵尸，投票已取消！"
+	}
+
+	"Potc Vote Starting In"
+	{
+		"#format"	"{1:d}"
+		"en"		"Starting vote in {1}s"
+		"fr"		"Début du vote dans {1}s"
+		"ru"		"Голосование начнётся через {1} с"
+		"es"		"La votación empieza en {1}s"
+		"de"		"Die Abstimmung beginnt in {1}s"
+		"pt"		"A votação começa em {1}s"
+		"chi"		"投票将在 {1} 秒后开始"
+	}
+
+	"Potc Vote In Progress"
+	{
+		"en"		"Another vote is currently in progress, retrying in 5s."
+		"fr"		"Un autre vote est en cours, nouvel essai dans 5s."
+		"ru"		"Сейчас идёт другое голосование, повтор через 5 с."
+		"es"		"Hay otra votación en curso, se reintentará en 5s."
+		"de"		"Eine andere Abstimmung läuft gerade, neuer Versuch in 5s."
+		"pt"		"Outra votação está em andamento, tentando novamente em 5s."
+		"chi"		"当前有其他投票正在进行，5 秒后重试。"
+	}
+
+	"Potc Vote Title"
+	{
+		"en"		"What stage to play next?"
+		"fr"		"Quel stage jouer ensuite ?"
+		"ru"		"Какой этап играть следующим?"
+		"es"		"¿Qué stage jugar a continuación?"
+		"de"		"Welche Stage soll als Nächstes gespielt werden?"
+		"pt"		"Qual stage jogar a seguir?"
+		"chi"		"下一个要玩哪个关卡？"
+	}
+
+	"Potc Revote Needed"
+	{
+		"en"		"A revote is needed!"
+		"fr"		"Un nouveau vote est nécessaire !"
+		"ru"		"Требуется повторное голосование!"
+		"es"		"¡Se necesita una nueva votación!"
+		"de"		"Eine erneute Abstimmung ist nötig!"
+		"pt"		"É necessária uma nova votação!"
+		"chi"		"需要重新投票！"
+	}
+
+	"Potc Vote Finished"
+	{
+		"#format"	"{1:s},{2:d},{3:d}"
+		"en"		"Vote finished! Winner: {red}{1}{white} with {2}%% of {3} votes!"
+		"fr"		"Vote terminé ! Gagnant : {red}{1}{white} avec {2}%% des {3} votes !"
+		"ru"		"Голосование завершено! Победитель: {red}{1}{white} — {2}%% голосов (всего голосов: {3})!"
+		"es"		"¡Votación terminada! Ganador: {red}{1}{white} con el {2}%% de {3} votos."
+		"de"		"Abstimmung beendet! Gewinner: {red}{1}{white} mit {2}%% von {3} Stimmen!"
+		"pt"		"Votação encerrada! Vencedor: {red}{1}{white} com {2}%% de {3} votos!"
+		"chi"		"投票结束！获胜者：{red}{1}{white}，获得 {3} 票中的 {2}%%！"
+	}
+
+	"Potc Moving To"
+	{
+		"#format"	"{1:s}"
+		"en"		"Moving to {red}{1}{white}."
+		"fr"		"Passage à {red}{1}{white}."
+		"ru"		"Переход на {red}{1}{white}."
+		"es"		"Pasando a {red}{1}{white}."
+		"de"		"Wechsel zu {red}{1}{white}."
+		"pt"		"Indo para {red}{1}{white}."
+		"chi"		"正在切换到 {red}{1}{white}。"
+	}
+}

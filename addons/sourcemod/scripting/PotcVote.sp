@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.4.3",
+	version     = "1.4.4",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
@@ -36,6 +36,8 @@ Handle g_CountdownTimer = null;
 
 public void OnPluginStart()
 {
+	LoadTranslations("PotcVote.phrases");
+
 	g_cDelay = CreateConVar("sm_potcvote_delay", "3.0", "Time in seconds before firing the vote", FCVAR_NOTIFY, true, 1.0, true, 10.0);
 	g_cPercent = CreateConVar("sm_potcvote_percent", "60", "Percent needed to valid the vote", FCVAR_NOTIFY, true, 1.0, true, 100.0);
 
@@ -182,18 +184,16 @@ public Action Command_AdminStartVote(int client, int argc)
 {
 	char name[64];
 
-	if (client == 0)
-		name = "The server";
-	else if(!GetClientName(client, name, sizeof(name))) 
+	if (client != 0 && !GetClientName(client, name, sizeof(name)))
 		Format(name, sizeof(name), "Disconnected (uid:%d)", client);
 
 	if (client != 0)
 	{
-		CPrintToChatAll("{green}[SM] {cyan}%s {white}has initiated a potc vote round (In %d seconds)", name, g_cDelay.IntValue);
+		CPrintToChatAll("{green}[SM] %t", "Potc Vote Initiated", name, g_cDelay.IntValue);
 		TerminateRound();
 	}
 	else
-		CPrintToChatAll("{green}[SM] {cyan}%s {white}has initiated a potc vote round (Next round)", name);
+		CPrintToChatAll("{green}[SM] %t", "Potc Vote Initiated Server");
 
 	Cmd_StartVote();
 
@@ -240,13 +240,13 @@ public void Cmd_StartVote()
 public void Cmd_CancelVote()
 {
 	bStartVoteNextRound = false;
-	CPrintToChatAll("{green}[PotcVote] {cyan}Zombies detected, aborting vote!");
+	CPrintToChatAll("{green}[PotcVote] {cyan}%t", "Potc Vote Aborted");
 }
 
 public Action StartVote_Timer(Handle timer)
 {
 	static int iCountDown = 3;
-	PrintCenterTextAll("[PotcVote] Starting Vote in %ds", iCountDown);
+	PrintCenterTextAll("[PotcVote] %t", "Potc Vote Starting In", iCountDown);
 
 	if (iCountDown-- <= 0)
 	{
@@ -263,7 +263,7 @@ public void InitiateVote()
 {
 	if(IsVoteInProgress())
 	{
-		CPrintToChatAll("{green}[PotcVote] {white}Another vote is currently in progress, retrying again in 5s.");
+		CPrintToChatAll("{green}[PotcVote] {white}%t", "Potc Vote In Progress");
 		delete g_CountdownTimer;
 		g_CountdownTimer = CreateTimer(5.0, StartVote_Timer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		return;
@@ -290,7 +290,7 @@ public void InitiateVote()
 	}
 
 	g_VoteMenu.OptionFlags = MENUFLAG_BUTTON_NOVOTE;
-	g_VoteMenu.SetTitle("What stage to play next?");
+	g_VoteMenu.SetTitle("%T", "Potc Vote Title", LANG_SERVER);
 	g_VoteMenu.VoteResultCallback = Handler_SettingsVoteFinished;
 	g_VoteMenu.DisplayVoteToAll(12);
 }
@@ -299,6 +299,14 @@ public int Handler_PotcVoteMenu(Menu menu, MenuAction action, int param1, int pa
 {
 	switch(action)
 	{
+		case MenuAction_Display:
+		{
+			char sTitle[128];
+			FormatEx(sTitle, sizeof(sTitle), "%T", "Potc Vote Title", param1);
+
+			Panel panel = view_as<Panel>(param2);
+			panel.SetTitle(sTitle);
+		}
 		case MenuAction_End:
 		{
 			delete menu;
@@ -321,7 +329,7 @@ public void Handler_SettingsVoteFinished(Menu menu, int num_votes, int num_clien
 
 	if ((highest_votes < required_votes) && (!g_bIsRevote))
 	{
-		CPrintToChatAll("{green}[PotcVote] {white}A revote is needed!");
+		CPrintToChatAll("{green}[PotcVote] {white}%t", "Potc Revote Needed");
 		char sFirst[128];
 		char sSecond[128];
 		menu.GetItem(item_info[0][VOTEINFO_ITEM_INDEX], sFirst, sizeof(sFirst));
@@ -349,7 +357,7 @@ public void Handler_VoteFinishedGeneric(Menu menu, int num_votes, int num_client
 	menu.GetItem(item_info[0][VOTEINFO_ITEM_INDEX], sWinner, sizeof(sWinner));
 	float fPercentage = float(item_info[0][VOTEINFO_ITEM_VOTES] * 100) / float(num_votes);
 
-	CPrintToChatAll("{green}[PotcVote] {white}Vote Finished! Winner: {red}%s{white} with %d%% of %d votes!", sWinner, RoundToFloor(fPercentage), num_votes);CPrintToChatAll("{green}[PotcVote] {white}Mooving to {red}%s{white}.", sWinner);
+	CPrintToChatAll("{green}[PotcVote] {white}%t", "Potc Vote Finished", sWinner, RoundToFloor(fPercentage), num_votes);CPrintToChatAll("{green}[PotcVote] {white}%t", "Potc Moving To", sWinner);
 
 	for (int i = 0; i <= (NUMBEROFSTAGES - 1); i++)
 	{
