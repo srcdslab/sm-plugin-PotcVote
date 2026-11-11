@@ -14,7 +14,7 @@ public Plugin myinfo =
 	name        = "PotcVoteSystem",
 	author	    = "Neon, maxime1907, .Rushaway",
 	description = "Vote system for Potc",
-	version     = "1.4.4",
+	version     = "1.4.5",
 	url         = "https://steamcommunity.com/id/n3ontm"
 }
 
